@@ -5,6 +5,9 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
 const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`listening on *:${PORT}`);
+});
 
 // public フォルダを静的ファイル配信
 app.use(express.static('public'));
