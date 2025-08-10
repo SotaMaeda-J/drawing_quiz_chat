@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>お絵かきクイズ - チャット（Step1）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header><h1>お絵かきクイズ — チャット</h1></header>
+
+    <main>
+      <ul id="messages"></ul>
+    </main>
+
+    <form id="form" autocomplete="off">
+      <input id="input" placeholder="メッセージを入力してEnter" autocomplete="off" />
+      <button>送信</button>
+    </form>
+  </div>
+
+  <!-- Socket.IO クライアントはサーバーが自動で配信 -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
