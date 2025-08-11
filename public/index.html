@@ -1,27 +1,117 @@
-<!doctype html>
-<html>
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <title>お絵かきクイズ - チャット（Step1）</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<title>お絵描きチャット</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+
+  /* 全体を9行×15列のグリッドに */
+  .container {
+    display: grid;
+    grid-template-rows: repeat(9, 1fr);
+    grid-template-columns: repeat(15, 1fr);
+    height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+  }
+
+  /* 各要素の共通：黒枠 */
+  .box {
+    border: 1px solid black;
+    box-sizing: border-box;
+  }
+
+  /* イラストボード（左上 1,1 → 7,12）*/
+  #board-container {
+    grid-row: 1 / span 7;   /* 1行目から7行分 */
+    grid-column: 1 / span 12; /* 1列目から12列分 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+  }
+
+  /* パレット（8,1 → 9,12） */
+  #palette {
+    grid-row: 8 / span 2;   /* 8行目から2行分 */
+    grid-column: 1 / span 12;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 5px;
+    gap: 5px;
+    background: #f0f0f0;
+  }
+
+  /* チャット（1,13 → 9,15） */
+  #chat-container {
+    grid-row: 1 / span 9;
+    grid-column: 13 / span 3;
+    display: flex;
+    flex-direction: column;
+    background: #fafafa;
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: 5px;
+  }
+
+  #form {
+    display: flex;
+    border-top: 1px solid #ccc;
+  }
+
+  #input {
+    flex: 1;
+    padding: 5px;
+    border: none;
+    outline: none;
+  }
+
+  #form button {
+    padding: 5px 10px;
+  }
+
+  canvas {
+    border: 1px solid black;
+    background: white;
+    max-width: 100%;
+    max-height: 100%;
+  }
+</style>
 </head>
 <body>
-  <div id="app">
-    <header><h1>お絵かきクイズ — チャット</h1></header>
-
-    <main>
-      <ul id="messages"></ul>
-    </main>
-
-    <form id="form" autocomplete="off">
-      <input id="input" placeholder="メッセージを入力してEnter" autocomplete="off" />
-      <button>送信</button>
-    </form>
+<div class="container">
+  <!-- イラストボード -->
+  <div id="board-container" class="box">
+    <canvas id="drawingCanvas" width="800" height="600"></canvas>
   </div>
 
-  <!-- Socket.IO クライアントはサーバーが自動で配信 -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="client.js"></script>
+  <!-- パレット -->
+  <div id="palette" class="box">
+    <div id="tools"></div>
+  </div>
+
+  <!-- チャット -->
+  <div id="chat-container" class="box">
+    <ul id="messages"></ul>
+    <form id="form">
+      <input id="input" autocomplete="off" /><button>送信</button>
+    </form>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
 </body>
 </html>
