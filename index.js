@@ -4,10 +4,12 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
-const PORT = process.env.PORT || 3000;
+/*const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`listening on *:${PORT}`);
 });
+*/
+const PORT = process.env.PORT || 3000;
 
 // public フォルダを静的ファイル配信
 app.use(express.static('public'));
@@ -35,6 +37,17 @@ io.on('connection', (socket) => {
       time: new Date().toISOString()
     };
     io.emit('chat message', payload);
+  });
+
+// 描画データ受信（線の座標や色）
+  socket.on('draw', (data) => {
+    socket.broadcast.emit('draw', data);
+  });
+
+  // 【追加】全消し指示の受信と送信
+  socket.on('clear', () => {
+    // 送信元以外全員に全消しを通知
+    socket.broadcast.emit('clear');
   });
 
   // 切断時
