@@ -5,6 +5,9 @@ const messages = document.getElementById('messages');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 const tools = document.getElementById('tools'); // パレット＋ツール表示用
+const gameControlDiv = document.createElement('div');
+gameControlDiv.style.margin = '10px 0';
+tools.parentNode.insertBefore(gameControlDiv, tools.nextSibling); // ツールの下に設置
 
 // ニックネーム入力
 let name = '';
@@ -28,6 +31,11 @@ function addMessage(html) {
   li.innerHTML = html;
   messages.appendChild(li);
   messages.scrollTop = messages.scrollHeight;
+
+  // 最大30行までに制限
+  while (messages.children.length > 30) {
+    messages.removeChild(messages.firstChild);
+  }
 }
 
 // チャット送信
@@ -62,7 +70,8 @@ input.addEventListener('keydown', (e) => {
 const canvas = document.getElementById('drawingCanvas');
 const ctx = canvas.getContext('2d');
 
-let drawing = false;
+let isDrawing = false;  // 現在マウス押下で描画中か
+let isLocked = false;   // ゲームロック状態
 let currentColor = 'black';
 let selectedColor = currentColor;
 let selectedSize = 2;
@@ -70,7 +79,7 @@ let selectedSize = 2;
 ctx.strokeStyle = currentColor;
 ctx.lineWidth = selectedSize;
 
-// 正しいマウス座標取得
+// マウス座標取得
 function getMousePos(canvas, evt) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
@@ -83,7 +92,8 @@ function getMousePos(canvas, evt) {
 
 // 描画開始
 canvas.addEventListener('mousedown', (e) => {
-  drawing = true;
+  if (isLocked) return;
+  isDrawing = true;
   const pos = getMousePos(canvas, e);
   ctx.beginPath();
   ctx.moveTo(pos.x, pos.y);
@@ -92,16 +102,25 @@ canvas.addEventListener('mousedown', (e) => {
 
 // 描画中
 canvas.addEventListener('mousemove', (e) => {
-  if (!drawing) return;
+  if (!isDrawing || isLocked) return;
   const pos = getMousePos(canvas, e);
   ctx.lineTo(pos.x, pos.y);
   ctx.stroke();
   socket.emit('draw', { x: pos.x, y: pos.y, color: currentColor, size: selectedSize });
 });
 
-// 描画終了
+// 描画終了（マウスアップ）
 canvas.addEventListener('mouseup', () => {
-  drawing = false;
+  if (!isDrawing) return;
+  isDrawing = false;
+  ctx.closePath();
+  socket.emit('draw', { end: true });
+});
+
+// 描画終了（パレット外に出たら終了）
+canvas.addEventListener('mouseleave', () => {
+  if (!isDrawing) return;
+  isDrawing = false;
   ctx.closePath();
   socket.emit('draw', { end: true });
 });
@@ -126,6 +145,7 @@ socket.on('draw', (data) => {
 // 全消し受信
 socket.on('clear', () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  addMessage(`<em>全消しが実行されました</em>`);
 });
 
 // ======== パレットとサイズ選択 ======== //
@@ -135,7 +155,7 @@ const sizes = [2, 5, 8, 13, 20];
 function renderTools() {
   tools.innerHTML = '';
 
-  // 色ボタン用コンテナ（横並び用）
+  // 色ボタン
   const colorContainer = document.createElement('div');
   colorContainer.style.display = 'flex';
   colorContainer.style.alignItems = 'center';
@@ -169,10 +189,9 @@ function renderTools() {
     };
     colorContainer.appendChild(btn);
   });
-
   tools.appendChild(colorContainer);
 
-  // ペン太さ用コンテナ（横並び用）
+  // ペンサイズ
   const sizeContainer = document.createElement('div');
   sizeContainer.style.display = 'flex';
   sizeContainer.style.alignItems = 'center';
@@ -219,7 +238,6 @@ function renderTools() {
 
     sizeContainer.appendChild(sizeBtn);
   });
-
   tools.appendChild(sizeContainer);
 
   // 全消しボタン
@@ -233,5 +251,50 @@ function renderTools() {
   tools.appendChild(clearBtn);
 }
 
-// 初期表示
 renderTools();
+
+// ======== ゲーム開始の同期制御 ======== //
+function addHostControls() {
+  // 既にあれば作らない
+  if(document.getElementById('startGameBtn')) return;
+
+  const startBtn = document.createElement('button');
+  startBtn.textContent = 'ゲーム開始';
+  startBtn.id = 'startGameBtn';
+  startBtn.style.marginLeft = '10px';
+  startBtn.onclick = () => socket.emit('start game request');
+  gameControlDiv.appendChild(startBtn);
+
+  const stopBtn = document.createElement('button');
+  stopBtn.textContent = '緊急停止';
+  stopBtn.id = 'emergencyStopBtn';
+  stopBtn.style.marginLeft = '10px';
+  stopBtn.onclick = () => socket.emit('emergency stop');
+  gameControlDiv.appendChild(stopBtn);
+}
+
+socket.on('host assigned', () => {
+  addHostControls();
+});
+
+socket.on('prepare game', () => {
+  // OKボタンあれば削除
+  const existingBtn = document.getElementById('readyBtn');
+  if (existingBtn) existingBtn.remove();
+
+  const okBtn = document.createElement('button');
+  okBtn.id = 'readyBtn';
+  okBtn.textContent = '開始OK';
+  okBtn.onclick = () => {
+    socket.emit('player ready');
+    okBtn.disabled = true;
+  };
+  gameControlDiv.appendChild(okBtn);
+});
+
+socket.on('start game', () => {
+  isLocked = true;
+  // OKボタン削除
+  const btn = document.getElementById('readyBtn');
+  if (btn) btn.remove();
+});

@@ -1,17 +1,14 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>お絵描きチャット</title>
+<meta charset="UTF-8" />
+<title>お絵かきチャット</title>
 <style>
   html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
+    margin: 0; padding: 0; height: 100%;
   }
 
-  /* 全体を9行×15列のグリッドに */
+  /* 9行×15列のグリッド */
   .container {
     display: grid;
     grid-template-rows: repeat(9, 1fr);
@@ -21,49 +18,60 @@
     box-sizing: border-box;
   }
 
-  /* 各要素の共通：黒枠 */
+  /* 共通の黒枠 */
   .box {
     border: 1px solid black;
     box-sizing: border-box;
   }
 
-  /* イラストボード（左上 1,1 → 7,12）*/
-  #board-container {
-    grid-row: 1 / span 7;   /* 1行目から7行分 */
-    grid-column: 1 / span 12; /* 1列目から12列分 */
+  /* タイトル：1行目の1列目～12列目 */
+  #title {
+    grid-row: 1 / 2;         /* 1行目のみ */
+    grid-column: 1 / 13;     /* 1列目から12列目まで */
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: white;
-  }
-
-  /* パレット（8,1 → 9,12） */
-  #palette {
-    grid-row: 8 / span 2;   /* 8行目から2行分 */
-    grid-column: 1 / span 12;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 5px;
-    gap: 5px;
+    padding-left: 10px;
+    font-size: 1.5em;
+    font-weight: bold;
     background: #f0f0f0;
   }
 
-  /* チャット（1,13 → 9,15） */
+  /* ボード：2行目～7行目の1列目～12列目 */
+  #board-container {
+    grid-row: 2 / 8;         /* 2行目から7行目 */
+    grid-column: 1 / 13;     /* 1列目から12列目 */
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* パレット：8行目～9行目の1列目～12列目 */
+  #palette {
+    grid-row: 8 / 10;        /* 8行目から9行目 */
+    grid-column: 1 / 13;     /* 1列目から12列目 */
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    gap: 5px;
+  }
+
+  /* チャット：1行目～9行目の13列目～15列目 */
   #chat-container {
-    grid-row: 1 / span 9;
-    grid-column: 13 / span 3;
+    grid-row: 1 / 10;        /* 1行目から9行目 */
+    grid-column: 13 / 16;    /* 13列目から15列目 */
+    background: #fafafa;
     display: flex;
     flex-direction: column;
-    background: #fafafa;
   }
 
   #messages {
     flex: 1;
-    overflow-y: auto;
-    list-style: none;
     margin: 0;
     padding: 5px;
+    overflow-y: auto;
+    list-style: none;
   }
 
   #form {
@@ -92,6 +100,11 @@
 </head>
 <body>
 <div class="container">
+  <!-- タイトル -->
+  <div id="title" class="box">
+    お絵かきチャット
+  </div>
+
   <!-- イラストボード -->
   <div id="board-container" class="box">
     <canvas id="drawingCanvas" width="800" height="600"></canvas>
@@ -106,7 +119,8 @@
   <div id="chat-container" class="box">
     <ul id="messages"></ul>
     <form id="form">
-      <input id="input" autocomplete="off" /><button>送信</button>
+      <input id="input" autocomplete="off" />
+      <button>送信</button>
     </form>
   </div>
 </div>
